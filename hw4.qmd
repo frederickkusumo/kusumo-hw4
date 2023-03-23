@@ -1,6 +1,9 @@
 ---
-title: "hw4"
-format: html
+title: "Homework 4"
+author: Frederick Kusumo
+format: 
+  html:
+    embeded-resources: true
 editor: visual
 ---
 
