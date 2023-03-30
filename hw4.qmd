@@ -81,6 +81,14 @@ user_comment <- disney_user %>%
   unnest_longer(comment) %>% 
   unnest_wider(comment)
 
+# Another way
+# a <- get_user_content(user)
+# b <- a[[user]]$comments
+# c <- tibble(b)
+
+# or
+# d <- pluck(a, user, "comments")
+
 user_comment <- user_comment %>% 
   rename("comments" = "...1")
 ```
