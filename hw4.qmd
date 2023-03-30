@@ -1,29 +1,117 @@
 ---
 title: "Homework 4"
 author: Frederick Kusumo
+date: 2023-03-30
+date-format: "YYYY-MM-DD"
 format: 
   html:
     embeded-resources: true
 editor: visual
+editor_options: 
+  chunk_output_type: console
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+# Import
 
 ```{r}
-1 + 1
+library(tidyverse)
+library(tidytext)
+library(RedditExtractoR)
 ```
 
-You can add options to executable code like this
+# 1. Most Frequent Word in Disney Subreddit
+
+This code is run interactively to save the rds file in the project folder.
+```{r}
+#| eval: false
+top_disney_urls <- find_thread_urls(subreddit="Disney", sort_by = "top")
+write_rds(top_disney_urls, "top_disney_urls.rds")
+```
+
+This code will run when rendering to read in the rds file.
+```{r}
+top_disney_urls <- read_rds("top_disney_urls.rds")
+```
 
 ```{r}
-#| echo: false
-2 * 2
+top_titles <- top_disney_urls %>% 
+  select(c(subreddit,title))
+
+rownames(top_titles) <- 1:nrow(top_titles)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+```{r}
+titles_tidy <- top_titles %>% 
+  unnest_tokens(word, title)
+
+titles_tidy <- titles_tidy %>% 
+  anti_join(stop_words)
+```
+
+```{r}
+titles_freq <- titles_tidy %>% 
+  count(word, sort=TRUE)
+
+head(titles_freq, 10)
+```
+
+```{r}
+titles_freq %>% 
+  filter(n > 9) %>%
+  ggplot(aes(x = n, y = reorder(word, n), fill = n)) +
+  geom_col(show.legend=FALSE) +
+  labs(
+    x = "Word",
+    y = "Frequency",
+    title = "Most frequent words in Subreddit: Disney"
+  ) +
+  theme_minimal() 
+```
+
+# 2. Most Frequent Word based on a user
+
+```{r}
+user <- "udarkcode88"
+disney_user <- tibble(json = get_user_content(user))
+
+user_comment <- disney_user %>% 
+  unnest_longer(json) %>% 
+  unnest_wider(json) %>% 
+  select(comment) %>% 
+  unnest_longer(comment) %>% 
+  unnest_wider(comment)
+
+user_comment <- user_comment %>% 
+  rename("comments" = "...1")
+```
+
+```{r}
+comments_tidy <- user_comment %>% 
+  unnest_tokens(word, comments)
+
+comments_tidy <- comments_tidy %>% 
+  anti_join(stop_words)
+
+comments_tidy <- comments_tidy %>% 
+  drop_na()
+```
+
+```{r}
+comments_freq <- comments_tidy %>% 
+  count(word, sort=TRUE)
+
+comments_freq
+```
+
+```{r}
+comments_freq %>% 
+  ggplot(aes(x = n, y = reorder(word, n), fill = n)) +
+  geom_col(show.legend=FALSE) +
+  labs(
+    x = "Word",
+    y = "Frequency",
+    title = "Most frequent words from user: udarkcode88"
+  ) +
+  theme_minimal() 
+```
+
