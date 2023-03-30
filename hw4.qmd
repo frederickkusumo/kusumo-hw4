@@ -91,6 +91,8 @@ user_comment <- disney_user %>%
 
 user_comment <- user_comment %>% 
   rename("comments" = "...1")
+
+user_comment
 ```
 
 ```{r}
